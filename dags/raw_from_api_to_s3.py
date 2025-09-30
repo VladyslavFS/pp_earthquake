@@ -13,8 +13,8 @@ DAG_ID = "raw_from_api_to_s3"
 LAYER = "raw"
 SOURCE = "earthquake"
 
-ACCESS_KEY = Variable.get("access_key")
-SECRET_KEY = Variable.get("secret_key")
+ACCESS_KEY = Variable.get("accessKey")
+SECRET_KEY = Variable.get("secretKey")
 
 args = {
     "owner": OWNER,
