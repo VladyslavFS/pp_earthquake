@@ -7,7 +7,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
-from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 
 OWNER = "VladyslavFS"
 DAG_ID = "raw_from_s3_to_pg"
@@ -17,14 +17,17 @@ SOURCE = "earthquake"
 SCHEMA = "ods"
 TARGET_TABLE = "fct_earthquake"
 
-ACCESS_KEY = Variable.get("accessKey")
-SECRET_KEY = Variable.get("secretKey")
+# AWS credentials
+AWS_ACCESS_KEY = Variable.get("aws_access_key_id")
+AWS_SECRET_KEY = Variable.get("aws_secret_access_key")
+AWS_REGION = Variable.get("aws_region", default_var="eu-north-1")
+S3_BUCKET = Variable.get("s3_bucket_name")
 
 DB_PASSWORD = Variable.get("pg_password")
 
 args = {
     "owner": OWNER,
-    "start_date": pendulum.datetime(2025, 8, 1, tz="Europe/Kyiv"),
+    "start_date": pendulum.datetime(2025, 9, 1, tz="Europe/Kyiv"),
     "catchup": True,
     "retries": 3,
     "retry_delay": pendulum.duration(hours=1),
@@ -49,11 +52,10 @@ def get_and_transfer_raw_data_to_ods_func(**context):
         SET TIMEZONE='UTC';
         INSTALL httpfs;
         LOAD httpfs;
-        SET s3_url_style = 'path';
-        SET s3_endpoint = 'minio:9000';
-        SET s3_access_key_id = '{ACCESS_KEY}';
-        SET s3_secret_access_key = '{SECRET_KEY}';
-        SET s3_use_ssl = FALSE;
+        SET s3_region = '{AWS_REGION}';
+        SET s3_access_key_id = '{AWS_ACCESS_KEY}';
+        SET s3_secret_access_key = '{AWS_SECRET_KEY}';
+        SET s3_use_ssl = TRUE;
 
         CREATE SECRET dwh_postgres (
             TYPE postgres,
@@ -114,7 +116,7 @@ def get_and_transfer_raw_data_to_ods_func(**context):
             status,
             locationSource AS location_source,
             magSource AS mag_source
-        FROM 's3://prod/{LAYER}/{SOURCE}/{start_date}/{start_date}_00-00-00.gz.parquet';
+        FROM 's3://{S3_BUCKET}/{LAYER}/{SOURCE}/{start_date}/{start_date}_00-00-00.gz.parquet';
         """,
     )
 
@@ -125,7 +127,7 @@ dag = DAG(
     dag_id=DAG_ID,
     schedule_interval="0 5 * * *",
     default_args=args,
-    tags=["s3", "ods", "pg"],
+    tags=["s3", "ods", "pg", "aws"],
     concurrency=1,
     max_active_tasks=1,
     max_active_runs=1,
@@ -133,13 +135,14 @@ dag = DAG(
 
 start = EmptyOperator(task_id="start", dag=dag,)
 
-sensor_on_raw_layer = ExternalTaskSensor(
-    task_id="sensor_on_raw_layer",
-    external_dag_id="raw_from_api_to_s3",
-    allowed_states=["success", ],
-    mode="reschedule",
-    timeout=360_000,
+sensor_on_s3 = S3KeySensor(
+    task_id="sensor_on_s3",
+    bucket_key="raw/earthquake/{{ ds }}/{{ ds }}_00-00-00.gz.parquet",
+    bucket_name=S3_BUCKET,
+    aws_conn_id="aws_default",
     poke_interval=60,
+    timeout=360_000,
+    mode="reschedule",
     dag=dag,
 )
 

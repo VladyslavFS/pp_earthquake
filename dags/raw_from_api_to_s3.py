@@ -13,12 +13,15 @@ DAG_ID = "raw_from_api_to_s3"
 LAYER = "raw"
 SOURCE = "earthquake"
 
-ACCESS_KEY = Variable.get("accessKey")
-SECRET_KEY = Variable.get("secretKey")
+# AWS credentials
+AWS_ACCESS_KEY = Variable.get("aws_access_key_id")
+AWS_SECRET_KEY = Variable.get("aws_secret_access_key")
+AWS_REGION = Variable.get("aws_region", default_var="us-east-1")
+S3_BUCKET = Variable.get("s3_bucket_name")
 
 args = {
     "owner": OWNER,
-    "start_date": pendulum.datetime(2025, 8, 1, tz="Europe/Kyiv"),
+    "start_date": pendulum.datetime(2025, 9, 1, tz="Europe/Kyiv"),
     "catchup": True,
     "retries": 3,
     "retry_delay": pendulum.duration(hours=1),
@@ -43,11 +46,10 @@ def get_and_transfer_api_data_to_s3_func(**context):
         SET TIMEZONE='UTC';
         INSTALL httpfs;
         LOAD httpfs;
-        SET s3_url_style = 'path';
-        SET s3_endpoint = 'minio:9000';
-        SET s3_access_key_id = '{ACCESS_KEY}';
-        SET s3_secret_access_key = '{SECRET_KEY}';
-        SET s3_use_ssl = FALSE;
+        SET s3_region = '{AWS_REGION}';
+        SET s3_access_key_id = '{AWS_ACCESS_KEY}';
+        SET s3_secret_access_key = '{AWS_SECRET_KEY}';
+        SET s3_use_ssl = TRUE;
 
         COPY
         (
@@ -55,7 +57,7 @@ def get_and_transfer_api_data_to_s3_func(**context):
                 *
             FROM
                 read_csv_auto('https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime={start_date}&endtime={end_date}') AS res
-        ) TO 's3://prod/{LAYER}/{SOURCE}/{start_date}/{start_date}_00-00-00.gz.parquet';
+        ) TO 's3://{S3_BUCKET}/{LAYER}/{SOURCE}/{start_date}/{start_date}_00-00-00.gz.parquet';
         """,
     )
 
@@ -66,7 +68,7 @@ dag = DAG(
     dag_id=DAG_ID,
     schedule_interval="0 5 * * *",
     default_args=args,
-    tags=["s3", "raw"],
+    tags=["s3", "raw", "aws"],
     concurrency=1,
     max_active_tasks=1,
     max_active_runs=1,
