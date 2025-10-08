@@ -12,7 +12,7 @@ SOURCE = "earthquake"
 SCHEMA = "dm"
 TARGET_TABLE = "fct_avg_day_earthquake"
 
-PG_CONNECT = "postgres_dwh"
+PG_CONNECT = "postgres_rds"
 
 args = {
     "owner": OWNER,

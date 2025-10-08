@@ -1,5 +1,5 @@
 import logging
-
+import os
 import duckdb
 import pendulum
 import datetime
@@ -18,12 +18,17 @@ SCHEMA = "ods"
 TARGET_TABLE = "fct_earthquake"
 
 # AWS credentials
-AWS_ACCESS_KEY = Variable.get("aws_access_key_id")
-AWS_SECRET_KEY = Variable.get("aws_secret_access_key")
-AWS_REGION = Variable.get("aws_region", default_var="eu-north-1")
-S3_BUCKET = Variable.get("s3_bucket_name")
+AWS_ACCESS_KEY = Variable.get("aws_access_key_id", default_var=os.getenv("AWS_ACCESS_KEY_ID"))
+AWS_SECRET_KEY = Variable.get("aws_secret_access_key", default_var=os.getenv("AWS_SECRET_ACCESS_KEY"))
+AWS_REGION = Variable.get("aws_region", default_var=os.getenv("AWS_REGION", "eu-north-1"))
+S3_BUCKET = Variable.get("s3_bucket_name", default_var=os.getenv("S3_BUCKET_NAME"))
 
-DB_PASSWORD = Variable.get("pg_password")
+# Postgres credentials
+DB_HOST = Variable.get("rds_endpoint", default_var=os.getenv("RDS_ENDPOINT"))
+DB_PORT = Variable.get("rds_port", default_var=os.getenv("RDS_PORT", "5432"))
+DB_NAME = Variable.get("pg_db_name", default_var=os.getenv("RDS_DATABASE", "postgres"))
+DB_USER = Variable.get("pg_user", default_var=os.getenv("RDS_USERNAME", "postgres"))
+DB_PASSWORD = Variable.get("pg_password", default_var=os.getenv("RDS_PASSWORD"))
 
 args = {
     "owner": OWNER,
@@ -59,10 +64,10 @@ def get_and_transfer_raw_data_to_ods_func(**context):
 
         CREATE SECRET dwh_postgres (
             TYPE postgres,
-            HOST 'postgres_dwh',
-            PORT 5432,
-            DATABASE postgres,
-            USER 'postgres',
+            HOST '{DB_HOST}',
+            PORT {DB_PORT},
+            DATABASE {DB_NAME},
+            USER {DB_USER},
             PASSWORD '{DB_PASSWORD}'
         );
 
