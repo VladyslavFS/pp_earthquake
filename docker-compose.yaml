@@ -63,12 +63,12 @@ x-airflow-common:
     # AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
     # AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     # AWS_REGION: ${AWS_REGION:-eu-north-1}
-    # RDS_ENDPOINT: ${RDS_ENDPOINT}
-    # RDS_PORT: ${RDS_PORT:-5432}
-    # RDS_PASSWORD: ${RDS_PASSWORD}
-    # AIRFLOW_CONN_POSTGRES_RDS: postgresql://postgres:${RDS_PASSWORD}@${RDS_ENDPOINT}:${RDS_PORT}/postgres
+    RDS_ENDPOINT: ${RDS_ENDPOINT}
+    RDS_PORT: ${RDS_PORT:-5432}
+    RDS_PASSWORD: ${RDS_PASSWORD}
+    AIRFLOW_CONN_POSTGRES_RDS: postgresql://postgres:${RDS_PASSWORD}@${RDS_ENDPOINT}:${RDS_PORT}/postgres
     # AIRFLOW_CONN_AWS_DEFAULT: aws://${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@?region_name=${AWS_REGION}
-    
+
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
