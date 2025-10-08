@@ -1,8 +1,12 @@
 import pendulum
+import psycopg2
+
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sensors.external_task import ExternalTaskSensor
+
+from utils.get_secrets import get_secret
 
 OWNER = "VladyslavFS"
 DAG_ID = "fct_count_day_earthquake"
@@ -12,7 +16,14 @@ SOURCE = "earthquake"
 SCHEMA = "dm"
 TARGET_TABLE = "fct_count_day_earthquake"
 
-PG_CONNECT = "postgres_rds"
+secret = get_secret("earthquake/rds/postgres")
+PG_CONNECT = psycopg2.connect(
+    dbname="postgres",
+    user="postgres",
+    password=secret["password"],
+    host=secret["host"],
+    port="5432"
+)
 
 args = {
     "owner": OWNER,
