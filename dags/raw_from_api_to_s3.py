@@ -1,11 +1,14 @@
 import logging
 import os
+
 import duckdb
 import pendulum
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
+
+from utils.get_secrets import get_secret
 
 OWNER = "VladyslavFS"
 DAG_ID = "raw_from_api_to_s3"
@@ -14,10 +17,10 @@ LAYER = "raw"
 SOURCE = "earthquake"
 
 # AWS credentials
-AWS_ACCESS_KEY = Variable.get("aws_access_key_id", default_var=os.getenv("AWS_ACCESS_KEY_ID"))
-AWS_SECRET_KEY = Variable.get("aws_secret_access_key", default_var=os.getenv("AWS_SECRET_ACCESS_KEY"))
-AWS_REGION = Variable.get("aws_region", default_var=(os.getenv("AWS_REGION"), "eu-north-1"))
-S3_BUCKET = Variable.get("s3_bucket_name", default_var=os.getenv("S3_BUCKET_NAME"))
+AWS_ACCESS_KEY = get_secret("earthquake/aws/credentials")["aws_access_key_id"]
+AWS_SECRET_KEY = get_secret("earthquake/aws/credentials")["aws_secret_access_key"]
+AWS_REGION = get_secret("earthquake/aws/credentials")["aws_region"]
+S3_BUCKET = get_secret("earthquake/aws/credentials")["s3_bucket_name"]
 
 args = {
     "owner": OWNER,
