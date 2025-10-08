@@ -1,13 +1,16 @@
 import logging
 import os
+import datetime
+
 import duckdb
 import pendulum
-import datetime
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
+
+from utils.get_secrets import get_secret
 
 OWNER = "VladyslavFS"
 DAG_ID = "raw_from_s3_to_pg"
@@ -18,17 +21,17 @@ SCHEMA = "ods"
 TARGET_TABLE = "fct_earthquake"
 
 # AWS credentials
-AWS_ACCESS_KEY = Variable.get("aws_access_key_id", default_var=os.getenv("AWS_ACCESS_KEY_ID"))
-AWS_SECRET_KEY = Variable.get("aws_secret_access_key", default_var=os.getenv("AWS_SECRET_ACCESS_KEY"))
-AWS_REGION = Variable.get("aws_region", default_var=os.getenv("AWS_REGION", "eu-north-1"))
-S3_BUCKET = Variable.get("s3_bucket_name", default_var=os.getenv("S3_BUCKET_NAME"))
+AWS_ACCESS_KEY = get_secret("earthquake/aws/credentials")["aws_access_key_id"]
+AWS_SECRET_KEY = get_secret("earthquake/aws/credentials")["aws_secret_access_key"]
+AWS_REGION = get_secret("earthquake/aws/credentials")["aws_region"]
+S3_BUCKET = get_secret("earthquake/aws/credentials")["s3_bucket_name"]
 
 # Postgres credentials
-DB_HOST = Variable.get("rds_endpoint", default_var=os.getenv("RDS_ENDPOINT"))
-DB_PORT = Variable.get("rds_port", default_var=os.getenv("RDS_PORT", "5432"))
-DB_NAME = Variable.get("pg_db_name", default_var=os.getenv("RDS_DATABASE", "postgres"))
-DB_USER = Variable.get("pg_user", default_var=os.getenv("RDS_USERNAME", "postgres"))
-DB_PASSWORD = Variable.get("pg_password", default_var=os.getenv("RDS_PASSWORD"))
+DB_HOST = get_secret("earthquake/rds/postgres")["host"]
+DB_PORT = get_secret("earthquake/rds/postgres")["port"]
+DB_NAME = get_secret("earthquake/rds/postgres")["dbname"]
+DB_USER = get_secret("earthquake/rds/postgres")["username"]
+DB_PASSWORD = get_secret("earthquake/rds/postgres")["password"]
 
 args = {
     "owner": OWNER,
@@ -144,7 +147,7 @@ sensor_on_s3 = S3KeySensor(
     task_id="sensor_on_s3",
     bucket_key="raw/earthquake/{{ ds }}/{{ ds }}_00-00-00.gz.parquet",
     bucket_name=S3_BUCKET,
-    aws_conn_id="aws_default",
+    aws_conn_id=None, # Using boto3 directly with provided keys
     poke_interval=60,
     timeout=360_000,
     mode="reschedule",
