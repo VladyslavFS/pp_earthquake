@@ -84,18 +84,18 @@ x-airflow-common:
       condition: service_healthy
 
 services:
-  postgres_dwh:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-      TZ: Europe/Kyiv
-    restart: always
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_dwh_data:/var/lib/postgresql/data
+  # postgres_dwh:
+  #   image: postgres:13
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: postgres
+  #     TZ: Europe/Kyiv
+  #   restart: always
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_dwh_data:/var/lib/postgresql/data
 
   # minio:
   #   image: minio/minio:RELEASE.2025-02-18T16-25-55Z
@@ -122,11 +122,11 @@ services:
       MB_DB_DBNAME: metabase
       MB_DB_PORT: 5432
       MB_DB_USER: postgres
-      MB_DB_PASS: postgres
-      MB_DB_HOST: postgres_dwh
+      MB_DB_PASS: ${RDS_PASSWORD}
+      MB_DB_HOST: ${RDS_ENDPOINT}
     restart: always
-    depends_on:
-      - postgres_dwh
+    # depends_on:
+    #   - postgres_dwh
 
   postgres:
     image: postgres:13
@@ -328,4 +328,4 @@ services:
 
 volumes:
   postgres_data:
-  postgres_dwh_data:
+  # postgres_dwh_data:

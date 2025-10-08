@@ -206,9 +206,34 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Project
+# Secrets
+*.pem
+*.key
+credentials.json
+secrets.yaml
+variables.json
+
+# AWS
+.aws/
+credentials
+
+# Local data
 data/
 logs/
-cred.py
 *.csv
+*.parquet# Secrets
+*.pem
+*.key
+credentials.json
+secrets.yaml
 variables.json
+
+# AWS
+.aws/
+credentials
+
+# Local data
+data/
+logs/
+*.csv
+*.parquet
