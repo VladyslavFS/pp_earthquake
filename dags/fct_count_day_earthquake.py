@@ -16,7 +16,7 @@ PG_CONNECT = "postgres_rds"
 
 args = {
     "owner": OWNER,
-    "start_date": pendulum.datetime(2025, 8, 1, tz="Europe/Kyiv"),
+    "start_date": pendulum.datetime(2025, 9, 1, tz="Europe/Kyiv"),
     "catchup": True,
     "retries": 3,
     "retry_delay": pendulum.duration(hours=1),
