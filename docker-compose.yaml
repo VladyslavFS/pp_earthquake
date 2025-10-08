@@ -60,12 +60,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
-    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-    AWS_REGION: ${AWS_REGION}
-    S3_BUCKET_NAME: ${S3_BUCKET_NAME}
     AIRFLOW_CONN_POSTGRES_RDS: postgresql://postgres:${RDS_PASSWORD}@${RDS_ENDPOINT}:${RDS_PORT}/postgres
-    AIRFLOW_CONN_AWS_DEFAULT: aws://${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@?region_name=${AWS_REGION}
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
